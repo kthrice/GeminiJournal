@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net: Default deny all unspecified collections and documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions for authentication and user-isolation
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Strict owner-isolated journal entries: users/{authenticatedUserUid}/journalEntries/{entryId}
+    // Path-based authorization: does not require a duplicate userId field in the document
+    match /users/{userId}/journalEntries/{entryId} {
+      // Unauthenticated users cannot read or list
+      // User A cannot read User B's entries
+      allow get, list: if isOwner(userId);
+      
+      // Unauthenticated users cannot create entries
+      // User A cannot create entries under User B's account
+      // Validates presence of required fields: title, messages, and summary
+      // Does not require a duplicate userId field in the journal entry document
+      allow create: if isOwner(userId)
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 300
+        && request.resource.data.messages is list
+        && request.resource.data.messages.size() <= 80
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() <= 5000
+        && (!('userId' in request.resource.data) || request.resource.data.userId == userId);
+        
+      // Unauthenticated users cannot update entries
+      // User A cannot update User B's entries
+      allow update: if isOwner(userId)
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 300
+        && request.resource.data.messages is list
+        && request.resource.data.messages.size() <= 80
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() <= 5000
+        && (!('userId' in request.resource.data) || request.resource.data.userId == userId);
+
+      // Unauthenticated users cannot delete entries
+      // User A cannot delete User B's entries
+      allow delete: if isOwner(userId);
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Personal Gemini Journal",
+  "description": "An authenticated web application for private reflective journaling, multi-turn AI conversations, and automated reflection summaries powered by Gemini and secured with Firebase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
