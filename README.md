@@ -4,7 +4,7 @@ Personal Gemini Journal is a production-grade, authenticated web application bui
 
 ---
 
-## Architecture & Tech Stack
+## Architecture
 
 ```
 [Browser / React 19 Client]
